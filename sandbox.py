@@ -1,5 +1,5 @@
+#Just for testing
 validCharacters = set("1234567890abcdefghijklmnopqrstuvwxyz. ")
-
 def preprocess_line(line):
     valid = ""
     #.lower() automatically changes all capitals to lower.
