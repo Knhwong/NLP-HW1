@@ -8,10 +8,20 @@ from collections import defaultdict
 
 tri_counts=defaultdict(int) #counts of all trigrams in input
 
+#We convert set to string for O(1) lookup
+validCharacters = set("1234567890abcdefghijklmnopqrstuvwxyz. ")
 
-#this function currently does nothing.
 def preprocess_line(line):
-    return line
+    valid = ""
+    #.lower() automatically changes all capitals to lower.
+    for i in line.lower():
+        if i in validCharacters:
+            if i in set("1234567890"):
+                valid += "0"
+            else:
+                valid += i
+        
+    return valid
 
 
 #here we make sure the user provides a training filename when
