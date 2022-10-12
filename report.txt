@@ -4,4 +4,5 @@ What is the Perplexity of ##abaab#
 2^(-1/8 * log2(0.00105)) = 2.35695525
 
 
-This appears to a trigram model
+This is probably an add-alpha model, many of the probabilities are exactly the same, which is probably the raw
+smoothing alpha, and that every possible trigram is accounted.
