@@ -50,13 +50,11 @@ def modelling(infile, alpha):
             prob = (tri_counts.get(str(state+c),0) + alpha) / (bi_counts[state] + (len(validCharacters)*alpha))
             distribution.append(prob)
             letter.append(c)
+        #We seperate the two rather than using a tuple so we can easily weigh later on.
         model[state] = (letter, distribution)
-        print(sum(distribution));
-    
-    
-    #for trigram in tri_counts:
-        #model[trigram] = tri_counts[trigram] / bi_counts[trigram[:2]]
+
     return model
+
  
 def printModel(model):
     for state in sorted(model.keys()):
