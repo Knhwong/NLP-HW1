@@ -1,6 +1,7 @@
 from importlib.metadata import distribution
 import sys
 from collections import defaultdict
+import random
 
 validCharacters = set("1234567890abcdefghijklmnopqrstuvwxyz. ")
 def preprocess_line(line):
@@ -18,6 +19,7 @@ def preprocess_line(line):
 
 
 #Add Alpha ESTIMATION as the Easiest
+#Need to deal with newLine and endLine
 def modelling(infile, alpha):
     infile = sys.argv[1]
     tri_counts= defaultdict(int)
@@ -55,6 +57,13 @@ def modelling(infile, alpha):
 
     return model
 
+def generate_from_LM(model):
+    fullState = ["#","#"]
+    for j in range(1,300):
+        state = fullState[j] + fullState[j-1]
+        nextState = random.choices(model[state][0], model[state][1])
+        fullState.append(nextState)
+    print(str(fullState))
  
 def printModel(model):
     for state in sorted(model.keys()):
@@ -79,6 +88,7 @@ infile = sys.argv[1] #get input argument: the training file
 
 #modelBR = importModel(infile2)
 model = modelling(infile, 0.1)
+generate_from_LM(model)
 #printModel(model)
             
                 
