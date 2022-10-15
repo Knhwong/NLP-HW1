@@ -5,7 +5,7 @@ import random
 
 validCharacters = set("1234567890abcdefghijklmnopqrstuvwxyz. ")
 def preprocess_line(line):
-    valid = ""
+    valid = "##"
     #.lower() automatically changes all capitals to lower.
     for i in line.lower():
         if i in validCharacters:
@@ -13,7 +13,7 @@ def preprocess_line(line):
                 valid += "0"
             else:
                 valid += i
-        
+    valid += "#"
     return valid
 
 
@@ -21,24 +21,23 @@ def preprocess_line(line):
 #Add Alpha ESTIMATION as the Easiest
 #Need to deal with newLine and endLine
 def modelling(infile, alpha):
-    infile = sys.argv[1]
     tri_counts= defaultdict(int)
     bi_counts = defaultdict(int)
     model = dict()
     with open(infile) as f:
         for line in f:
-            line = preprocess_line(line)
+            line_ = preprocess_line(line)
             
-            for j in range(len(line)-3):
-                trigram = line[j:j+3]
+            for j in range(len(line_)-2):
+                trigram = line_[j:j+3]
                 tri_counts[trigram] += 1
                 
                 #Get Bigrams to Find Prob
-                bigram = line[j:j+2]
+                bigram = line_[j:j+2]
                 bi_counts[bigram] += 1
             
-            f = len(line) - 3
-            bigram = line[f:f+2]
+            f = len(line_) - 3
+            bigram = line_[f:f+2]
             bi_counts[bigram] += 1
 
     #If we consider a|bc, bi_counts contains all trigram counts of bc occuring.
@@ -47,11 +46,18 @@ def modelling(infile, alpha):
         #build probability distribution
         distribution = []
         letter = []
+        #include eof
+        n = len(validCharacters) + 1
         for c in validCharacters:
             #state+c is the trigram
-            prob = (tri_counts.get(str(state+c),0) + alpha) / (bi_counts[state] + (len(validCharacters)*alpha))
+            prob = (tri_counts.get(str(state+c),0) + alpha) / (bi_counts[state] + (n*alpha))
             distribution.append(prob)
             letter.append(c)
+        #Extra Operation for # eol
+        prob = (tri_counts.get(str(state+'#'),0) + alpha) / (bi_counts[state] + (n*alpha))
+        distribution.append(prob)
+        letter.append("#")
+            
         #We seperate the two rather than using a tuple so we can easily weigh later on.
         model[state] = (letter, distribution)
 
@@ -67,29 +73,36 @@ def generate_from_LM(model):
  
 def printModel(model):
     for state in sorted(model.keys()):
-        for i in range(len(validCharacters)):
+        for i in range(len(model[state][0])):
             print(state + model[state][0][i] + "|" + str(model[state][1][i]))
         
-        #print("(" + str(trigram[2]) + "|" + str(trigram[:2]) + "):" + str(model[trigram]))
 
 #0-2 Trigram
 #4-13 Probability
 def importModel(infile):
     model = dict()
-    s = 0
     with open(infile) as f:
         for line in f:
-            model[line[:3]] = float(line[4:14])
+            #[:2] = State
+            state = line[:2]
+            letter = line[2]
+            prob = float(line[4:14])
+            
+            if state in model:
+                model[state][0].append(letter)
+                model[state][1].append(prob)
+            else:
+                distribution = [prob]
+                letters = [letter]
+                model[state] = (letters, distribution)
+                
     return model
 
     
-infile = sys.argv[1] #get input argument: the training file
-#infile2 = sys.argv[2]
-
-#modelBR = importModel(infile2)
-model = modelling(infile, 0.1)
-generate_from_LM(model)
+model = modelling('training.en', 0.1)
+modelBR = importModel('model-br.en')
 #printModel(model)
+#generate_from_LM(model)
             
                 
     
