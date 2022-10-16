@@ -4,6 +4,7 @@ from collections import defaultdict
 import random
 
 validCharacters = set("1234567890abcdefghijklmnopqrstuvwxyz. ")
+vocabulary = " #.0abcdefghijklmnopqrstuvwxyz"
 def preprocess_line(line):
     valid = "##"
     #.lower() automatically changes all capitals to lower.
@@ -39,37 +40,29 @@ def modelling(infile, alpha):
             f = len(line_) - 3
             bigram = line_[f:f+2]
             bi_counts[bigram] += 1
-
-    #If we consider a|bc, bi_counts contains all trigram counts of bc occuring.
-    #Switch to add alpha of 0.05
-    for state in bi_counts:
-        #build probability distribution
-        distribution = []
-        letter = []
-        #include eof
-        n = len(validCharacters) + 1
-        for c in validCharacters:
-            #state+c is the trigram
-            prob = (tri_counts.get(str(state+c),0) + alpha) / (bi_counts[state] + (n*alpha))
-            distribution.append(prob)
-            letter.append(c)
-        #Extra Operation for # eol
-        prob = (tri_counts.get(str(state+'#'),0) + alpha) / (bi_counts[state] + (n*alpha))
-        distribution.append(prob)
-        letter.append("#")
             
-        #We seperate the two rather than using a tuple so we can easily weigh later on.
-        model[state] = (letter, distribution)
-
+    n = len(vocabulary)
+    for uni in vocabulary:
+        for bi in vocabulary:
+            state = uni + bi
+            distribution = []
+            letters = []
+            for tri in vocabulary:
+                prob = (tri_counts.get(str(state+tri),0) + alpha) / (bi_counts[state] + (n*alpha))
+                distribution.append(prob)
+                letters.append(tri)
+            model[state] = (letters, distribution)
+        
     return model
 
 def generate_from_LM(model):
-    fullState = ["#","#"]
+    fullState = "##"
     for j in range(1,300):
-        state = fullState[j] + fullState[j-1]
+        state = fullState[j-1] + fullState[j]
         nextState = random.choices(model[state][0], model[state][1])
-        fullState.append(nextState)
-    print(str(fullState))
+        fullState += (nextState[0])
+    fullState = fullState[3:].replace("#", "\n")
+    return fullState
  
 def printModel(model):
     for state in sorted(model.keys()):
@@ -99,10 +92,11 @@ def importModel(infile):
     return model
 
     
-model = modelling('training.en', 0.1)
+model = modelling('training.en', 0)
 modelBR = importModel('model-br.en')
 #printModel(model)
-#generate_from_LM(model)
+randomString = generate_from_LM(model)
+print(randomString)
             
                 
     
